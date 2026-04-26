@@ -65,35 +65,55 @@ router.post("/signup", (req, res) => {
 // ======================
 // LOGIN (SAFE FIX)
 // ======================
-router.post("/login", (req, res) => {
-  const { cardNo, pin } = req.body;
+router.post("/signup", (req, res) => {
+  try {
+    const data = req.body;
 
-  db.query(
-    "SELECT * FROM users WHERE cardNo = ?",
-    [cardNo],
-    (err, result) => {
+    const sql = `
+      INSERT INTO users (
+        name, fatherName, gender, dob, email, phone, address, pincode,
+        occupation, income, qualification,
+        accountType, cardNo, pin, balance
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+    `;
 
-      if (err) {
-        console.log(err);
-        return res.json({ status: "error", message: "DB error" });
+    db.query(
+      sql,
+      [
+        data.name,
+        data.fatherName,
+        data.gender,
+        data.dob,
+        data.email,
+        data.phone,
+        data.address,
+        data.pincode,
+        data.occupation,
+        data.income,
+        data.education, // 🔥 IMPORTANT FIX
+        data.accountType,
+        data.cardNo,
+        data.pin
+      ],
+      (err, result) => {
+        if (err) {
+          console.log("DB ERROR:", err);
+          return res.json({
+            status: "error",
+            message: err.message
+          });
+        }
+
+        return res.json({ status: "success" });
       }
+    );
 
-      if (!result || result.length === 0) {
-        return res.json({ status: "error", message: "User not found" });
-      }
-
-      if (result[0].pin !== pin) {
-        return res.json({ status: "error", message: "Incorrect PIN" });
-      }
-
-      res.json({
-        status: "success",
-        user: result[0],
-      });
-    }
-  );
+  } catch (error) {
+    console.log("SERVER ERROR:", error);
+    res.json({ status: "error", message: "Server crash" });
+  }
 });
-
 
 // ======================
 // DEPOSIT
