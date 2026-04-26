@@ -1,0 +1,25 @@
+Initialize project
+npm init -y
+
+Install packages
+npm install express mongoose cors dotenv
+
+Create server.js
+
+Run server
+node server.js
+
+Check in browser
+Open:
+http://localhost:5000
+You should see:
+API is running...
+
+
+Go to MongoDB Atlas
+👉 Click:
+Clusters
+Browse Collections
+test
+users
+Documents (can see signup datas)
