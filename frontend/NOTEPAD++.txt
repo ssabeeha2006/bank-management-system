@@ -1,0 +1,17 @@
+How to run 
+npx create-react-app bank-system
+cd bank-system
+//
+npm install react-router-dom
+npm start
+//
+//
+npm install
+npm start
+//
+
+Print + Download (PDF) for Mini Statement with:
+Install PDF library
+npm install jspdf
+jsPDF alone is basic → for table we must use plugin:
+npm install jspdf jspdf-autotable
