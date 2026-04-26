@@ -8,23 +8,33 @@ function Login() {
   const [cardNo, setCardNo] = useState("");
   const [pin, setPin] = useState("");
 
-const handleLogin = async () => {
-  try {
-    const res = await API.post("/login", {
-      cardNo,
-      pin,
-    });
+  const handleLogin = async () => {
+    try {
+      const res = await fetch("https://bank-management-system-2qrm.onrender.com/login.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          cardNo: cardNo, // ✅ FIXED HERE
+          pin: pin
+        })
+      });
 
-    if (res.data.user) {
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      navigate("/home");
-    } else {
-      alert(res.data.message);
+      const data = await res.json();
+
+      if (data.status === "success") {
+        alert("Login successful");
+        // navigate("/dashboard"); // (optional next step)
+      } else {
+        alert("Invalid card number or PIN");
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert("Server error");
     }
-  } catch (err) {
-    alert("Login error");
-  }
-};
+  };
 
   return (
     <div style={styles.container}>
@@ -64,7 +74,6 @@ const handleLogin = async () => {
           </button>
         </div>
 
-        {/* ✅ IMPORTANT FIX */}
         <p style={styles.signup}>
           New user?{" "}
           <span onClick={() => navigate("/signup1")} style={styles.link}>
