@@ -6,47 +6,57 @@ const db = require("../config/db");
 // SIGNUP (FIXED + DEBUG)
 // ======================
 router.post("/signup", (req, res) => {
-  const data = req.body;
+  const {
+    name,
+    fatherName,
+    gender,
+    dob,
+    email,
+    phone,
+    address,
+    pincode,
+    occupation,
+    income,
+    education,   // from frontend
+    accountType,
+    cardNo,
+    pin
+  } = req.body;
 
   const sql = `
     INSERT INTO users 
-    (name, fatherName, gender, dob, email, phone, address, pincode, pan, aadhar, occupation, income, qualification, accountType, cardNo, pin)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (name, fatherName, gender, dob, email, phone, address, pincode, occupation, income, qualification, accountType, cardNo, pin, balance)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
   `;
 
   db.query(
     sql,
     [
-      data.name || null,
-      data.fatherName || null,
-      data.gender || null,
-      data.dob || null,
-      data.email || null,
-      data.phone || null,
-      data.address || null,
-      data.pincode || null,
-      data.pan || null,
-      data.aadhar || null,
-      data.occupation || null,
-      data.income || 0,
-      data.qualification || null,
-      data.accountType || null,
-      data.cardNo,
-      data.pin,
+      name,
+      fatherName,
+      gender,
+      dob,
+      email,
+      phone,
+      address,
+      pincode,
+      occupation,
+      income,
+      education,   // 🔥 FIXED HERE
+      accountType,
+      cardNo,
+      pin
     ],
     (err, result) => {
       if (err) {
-        console.log("❌ Signup Error:", err); // 🔥 IMPORTANT
+        console.log("DB ERROR:", err);
         return res.json({
           status: "error",
-          message: err.message, // 🔥 SHOW REAL ERROR
+          message: err.message
         });
       }
 
-      res.json({
-        status: "success",
-        message: "Signup successful",
-      });
+      res.json({ status: "success" });
     }
   );
 });
