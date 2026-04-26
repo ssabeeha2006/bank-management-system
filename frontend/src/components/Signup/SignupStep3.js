@@ -61,13 +61,19 @@ function SignupStep3() {
     const finalData = { ...prevData, ...form };
 
     try {
-      await API.post("/signup", finalData);
+      const res = await API.post("/signup", finalData);
 
-      alert("Signup Successful!");
-      navigate("/");
+      // 🔥 IMPORTANT: check backend response
+      if (res.data.status === "success") {
+        alert("Signup Successful!");
+        navigate("/");
+      } else {
+        alert(res.data.message || "Error saving data"); // 🔥 real error
+      }
+
     } catch (err) {
       console.error(err);
-      alert("Error saving data");
+      alert("Server error");
     }
   };
 
@@ -128,7 +134,7 @@ function SignupStep3() {
             name="agree"
             checked={form.agree}
             onChange={handleChange}
-          />{" "}
+          />
           I agree to terms and conditions
         </label>
         <span style={styles.error}>{errors.agree}</span>
