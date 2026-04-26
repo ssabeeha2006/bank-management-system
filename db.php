@@ -1,10 +1,18 @@
 <?php
 
-$host = "shuttle.proxy.rlwy.net";
-$user = "root";
-$password = "QukXncydiRRTXohqRbTBVLuaSQKLpltf";
-$dbname = "railway";
-$port = 54756;
+$DATABASE_URL = getenv("DATABASE_URL");
+
+if (!$DATABASE_URL) {
+    die("DATABASE_URL not set");
+}
+
+$db = parse_url($DATABASE_URL);
+
+$host = $db["host"];
+$user = $db["user"];
+$password = $db["pass"];
+$dbname = ltrim($db["path"], "/");
+$port = $db["port"];
 
 $conn = new mysqli($host, $user, $password, $dbname, $port);
 
