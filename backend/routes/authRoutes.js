@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require("../config/db");
 
 // ======================
-// SIGNUP
+// SIGNUP (FIXED + DEBUG)
 // ======================
 router.post("/signup", (req, res) => {
   const data = req.body;
@@ -14,35 +14,46 @@ router.post("/signup", (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(sql, [
-    data.name || "",
-    data.fatherName || "",
-    data.gender || "",
-    data.dob || null,
-    data.email || "",
-    data.phone || "",
-    data.address || "",
-    data.pincode || "",
-    data.pan || "",
-    data.aadhar || "",
-    data.occupation || "",
-    Number(data.income) || 0,
-    data.qualification || "",
-    data.accountType || "",
-    data.cardNo,
-    data.pin
-  ], (err) => {
-    if (err) {
-      console.log("❌ Signup Error:", err);
-      return res.json({ message: "Error saving data" });
-    }
+  db.query(
+    sql,
+    [
+      data.name || null,
+      data.fatherName || null,
+      data.gender || null,
+      data.dob || null,
+      data.email || null,
+      data.phone || null,
+      data.address || null,
+      data.pincode || null,
+      data.pan || null,
+      data.aadhar || null,
+      data.occupation || null,
+      data.income || 0,
+      data.qualification || null,
+      data.accountType || null,
+      data.cardNo,
+      data.pin,
+    ],
+    (err, result) => {
+      if (err) {
+        console.log("❌ Signup Error:", err); // 🔥 IMPORTANT
+        return res.json({
+          status: "error",
+          message: err.message, // 🔥 SHOW REAL ERROR
+        });
+      }
 
-    res.json({ message: "Signup successful" });
-  });
+      res.json({
+        status: "success",
+        message: "Signup successful",
+      });
+    }
+  );
 });
 
+
 // ======================
-// LOGIN
+// LOGIN (SAFE FIX)
 // ======================
 router.post("/login", (req, res) => {
   const { cardNo, pin } = req.body;
@@ -51,19 +62,31 @@ router.post("/login", (req, res) => {
     "SELECT * FROM users WHERE cardNo = ?",
     [cardNo],
     (err, result) => {
-      if (result.length === 0)
-        return res.json({ message: "User not found" });
 
-      if (result[0].pin !== pin)
-        return res.json({ message: "Incorrect PIN" });
+      if (err) {
+        console.log(err);
+        return res.json({ status: "error", message: "DB error" });
+      }
 
-      res.json({ user: result[0] });
+      if (!result || result.length === 0) {
+        return res.json({ status: "error", message: "User not found" });
+      }
+
+      if (result[0].pin !== pin) {
+        return res.json({ status: "error", message: "Incorrect PIN" });
+      }
+
+      res.json({
+        status: "success",
+        user: result[0],
+      });
     }
   );
 });
 
+
 // ======================
-// DEPOSIT (WITH LOG)
+// DEPOSIT
 // ======================
 router.post("/deposit", (req, res) => {
   const { cardNo, amount } = req.body;
@@ -72,7 +95,7 @@ router.post("/deposit", (req, res) => {
     "UPDATE users SET balance = balance + ? WHERE cardNo = ?",
     [amount, cardNo],
     (err) => {
-      if (err) return res.json({ message: "Error" });
+      if (err) return res.json({ status: "error", message: err.message });
 
       const now = new Date();
 
@@ -87,13 +110,14 @@ router.post("/deposit", (req, res) => {
         ]
       );
 
-      res.json({ message: "Deposit successful" });
+      res.json({ status: "success", message: "Deposit successful" });
     }
   );
 });
 
+
 // ======================
-// WITHDRAW (WITH LOG)
+// WITHDRAW
 // ======================
 router.post("/withdraw", (req, res) => {
   const { cardNo, amount } = req.body;
@@ -102,14 +126,20 @@ router.post("/withdraw", (req, res) => {
     "SELECT balance FROM users WHERE cardNo = ?",
     [cardNo],
     (err, result) => {
-      if (result[0].balance < amount)
-        return res.json({ message: "Insufficient balance" });
+
+      if (!result || result.length === 0) {
+        return res.json({ status: "error", message: "User not found" });
+      }
+
+      if (result[0].balance < amount) {
+        return res.json({ status: "error", message: "Insufficient balance" });
+      }
 
       db.query(
         "UPDATE users SET balance = balance - ? WHERE cardNo = ?",
         [amount, cardNo],
         (err) => {
-          if (err) return res.json({ message: "Error" });
+          if (err) return res.json({ status: "error", message: err.message });
 
           const now = new Date();
 
@@ -124,15 +154,16 @@ router.post("/withdraw", (req, res) => {
             ]
           );
 
-          res.json({ message: "Withdraw successful" });
+          res.json({ status: "success", message: "Withdraw successful" });
         }
       );
     }
   );
 });
 
+
 // ======================
-// BALANCE (WITH LOG)
+// BALANCE
 // ======================
 router.post("/balance", (req, res) => {
   const { cardNo } = req.body;
@@ -141,6 +172,10 @@ router.post("/balance", (req, res) => {
     "SELECT balance FROM users WHERE cardNo = ?",
     [cardNo],
     (err, result) => {
+
+      if (!result || result.length === 0) {
+        return res.json({ status: "error", message: "User not found" });
+      }
 
       const now = new Date();
 
@@ -155,13 +190,14 @@ router.post("/balance", (req, res) => {
         ]
       );
 
-      res.json({ balance: result[0].balance });
+      res.json({ status: "success", balance: result[0].balance });
     }
   );
 });
 
+
 // ======================
-// CHANGE PIN (WITH LOG)
+// CHANGE PIN
 // ======================
 router.post("/change-pin", (req, res) => {
   const { cardNo, oldPin, newPin } = req.body;
@@ -170,13 +206,21 @@ router.post("/change-pin", (req, res) => {
     "SELECT pin FROM users WHERE cardNo = ?",
     [cardNo],
     (err, result) => {
-      if (result[0].pin !== oldPin)
-        return res.json({ message: "Wrong PIN" });
+
+      if (!result || result.length === 0) {
+        return res.json({ status: "error", message: "User not found" });
+      }
+
+      if (result[0].pin !== oldPin) {
+        return res.json({ status: "error", message: "Wrong PIN" });
+      }
 
       db.query(
         "UPDATE users SET pin = ? WHERE cardNo = ?",
         [newPin, cardNo],
-        () => {
+        (err) => {
+
+          if (err) return res.json({ status: "error", message: err.message });
 
           const now = new Date();
 
@@ -191,12 +235,13 @@ router.post("/change-pin", (req, res) => {
             ]
           );
 
-          res.json({ message: "PIN updated successfully" });
+          res.json({ status: "success", message: "PIN updated successfully" });
         }
       );
     }
   );
 });
+
 
 // ======================
 // MINI STATEMENT
@@ -208,7 +253,7 @@ router.post("/statement", (req, res) => {
     "SELECT * FROM transactions WHERE cardNo = ? ORDER BY id DESC",
     [cardNo],
     (err, result) => {
-      res.json({ transactions: result });
+      res.json({ status: "success", transactions: result });
     }
   );
 });
